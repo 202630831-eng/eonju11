@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘 뭐 먹지? 🇨🇳 중국집 메뉴 추천기</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+        }
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: #fff;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #d32f2f;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #b71c1c;
+        }
+        .result-container {
+            margin-top: 30px;
+        }
+        .menu-card {
+            background: #fff5f5;
+            border: 1px solid #ffe0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .menu-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #b71c1c;
+            display: flex;
+            justify-content: space-between;
+        }
+        .menu-price {
+            font-size: 16px;
+            color: #555;
+        }
+        .menu-desc {
+            margin-top: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .tag {
+            display: inline-block;
+            background: #ffe0e0;
+            color: #d32f2f;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 12px;
+            margin-top: 8px;
+            margin-right: 5px;
+        }
+        .no-result {
+            text-align: center;
+            color: #777;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🇨🇳 중국집 메뉴 추천기</h1>
+    
+    <!-- 입력 폼 -->
+    <div class="form-group">
+        <label for="budget">최대 예산 (원)</label>
+        <input type="number" id="budget" placeholder="예: 12000" step="1000">
+    </div>
+
+    <div class="form-group">
+        <label for="hunger">현재 허기짐 상태</label>
+        <select id="hunger">
+            <option value="1">1단계: 출출함 (간편하게 먹고 싶음)</option>
+            <option value="2" selected>2단계: 적당함 (기본 1인분)</option>
+            <option value="3">3단계: 배고픔 (든든한 식사/세트)</option>
+            <option value="4">4단계: 매우 배고픔 (메인요리/폭식)</option>
+        </select>
+    </div>
+
+    <button onclick="recommendMenu()">맞춤 메뉴 추천받기 🍜</button>
+
+    <!-- 결과 출력 영역 -->
+    <div id="results" class="result-container"></div>
+</div>
+
+<script>
+    // 중국집 메뉴 데이터 베이스
+    const menuData = [
+        {
+            name: "짜장면",
+            price: 7000,
+            hungerLevel: [1, 2],
+            desc: "춘장과 돼지고기, 야채를 볶아 만든 대표 중화요리.",
+            taste: "달콤하고 고소한 풍미가 일품입니다.",
+            advantage: "가장 가성비가 좋고 호불호 없이 빠르고 맛있게 먹을 수 있습니다."
+        },
+        {
+            name: "짬뽕",
+            price: 8500,
+            hungerLevel: [1, 2],
+            desc: "해산물과 채소가 듬뿍 들어간 칼칼한 국물 면요리.",
+            taste: "얼큰하고 시원한 해물 국물 맛.",
+            advantage: "해장용으로 최고이며 해산물과 면을 동시에 즐길 수 있습니다."
+        },
+        {
+            name: "간짜장",
+            price: 8500,
+            hungerLevel: [2],
+            desc: "물과 녹말 없이 양파와 고기를 바로 볶아낸 짜장면.",
+            taste: "진한 불향과 양파의 아삭아삭한 식감.",
+            advantage: "일반 짜장보다 신선하고 깊은 불맛을 느낄 수 있습니다."
+        },
+        {
+            name: "볶음밥",
+            price: 8500,
+            hungerLevel: [2, 3],
+            desc: "계란, 야채와 함께 고슬고슬하게 볶아낸 밥에 짜장 소스 결합.",
+            taste: "고소한 밥과 짭조름한 짜장 소스의 조화.",
+            advantage: "면보다 밥을 선호하는 분께 추천하며, 짬뽕 국물까지 제공됩니다."
+        },
+        {
+            name: "잡채밥",
+            price: 9500,
+            hungerLevel: [2, 3],
+            desc: "매콤하게 볶아낸 당면과 야채를 밥 위에 얹은 메뉴.",
+            taste: "매콤달콤하고 쫄깃한 당면의 식감.",
+            advantage: "탄수화물 충전에 최고이며 든든한 한 끼로 제격입니다."
+        },
+        {
+            name: "탕짜면 / 짬짜면 (반반)",
+            price: 10500,
+            hungerLevel: [3],
+            desc: "두 가지 인기 메뉴를 반반 그릇에 담아 동시에 즐기는 메뉴.",
+            taste: "단짠(짜장/탕수육) 또는 매콤달콤의 완벽한 조화.",
+            advantage: "메뉴 결정 장애가 있을 때 부담 없이 탕수육까지 맛볼 수 있습니다."
+        },
+        {
+            name: "차돌짬뽕",
+            price: 11000,
+            hungerLevel: [3],
+            desc: "고소한 차돌박이를 듬뿍 올린 진한 국물의 짬뽕.",
+            taste: "고기의 묵직하고 고소한 육즙이 녹아든 매콤한 국물.",
+            advantage: "일반 짬뽕보다 훨씬 깊고 묵직한 국물 맛과 든든함이 강점입니다."
+        },
+        {
+            name: "1인 탕수육 세트 (짜장+탕수육)",
+            price: 15000,
+            hungerLevel: [3, 4],
+            desc: "짜장면 1공기와 미니 탕수육이 세트로 구성된 메뉴.",
+            taste: "바삭하고 달콤한 탕수육과 고소한 짜장면의 만남.",
+            advantage: "혼자서도 탕수육을 남김없이 알차게 즐길 수 있습니다."
+        },
+        {
+            name: "요리류 (탕수육 小 / 깐풍기)",
+            price: 20000,
+            hungerLevel: [4],
+            desc: "돼지고기 또는 닭고기를 바삭하게 튀겨 특제 소스에 버무린 메인 요리.",
+            taste: "겉은 바삭, 속은 촉촉하며 새콤달콤하거나 매콤한 소스 맛.",
+            advantage: "배가 매우 고프거나 술안주/특식으로 즐기기에 최고의 선택입니다."
+        }
+    ];
+
+    function recommendMenu() {
+        const budgetInput = document.getElementById('budget').value;
+        const hungerSelect = parseInt(document.getElementById('hunger').value);
+        const resultDiv = document.getElementById('results');
+
+        resultDiv.innerHTML = ""; // 기존 결과 초기화
+
+        if (!budgetInput || budgetInput <= 0) {
+            alert("최대 예산을 바르게 입력해 주세요!");
+            return;
+        }
+
+        const budget = parseInt(budgetInput);
+
+        // 예산 및 허기짐 조건에 맞는 메뉴 필터링
+        const filteredMenus = menuData.filter(menu => {
+            const isPriceOk = menu.price <= budget;
+            const isHungerOk = menu.hungerLevel.includes(hungerSelect);
+            return isPriceOk && isHungerOk;
+        });
+
+        if (filteredMenus.length === 0) {
+            resultDiv.innerHTML = `<div class="no-result">😭 입력하신 금액(${budget.toLocaleString()}원)과 허기짐 상태에 맞는 메뉴가 없습니다.<br>예산을 조금 더 늘려보세요!</div>`;
+            return;
+        }
+
+        // 결과 카드 생성
+        filteredMenus.forEach(menu => {
+            const card = document.createElement('div');
+            card.className = 'menu-card';
+            card.innerHTML = `
+                <div class="menu-title">
+                    <span>${menu.name}</span>
+                    <span class="menu-price">${menu.price.toLocaleString()}원</span>
+                </div>
+                <div class="menu-desc">
+                    <p><strong>📝 설명:</strong> ${menu.desc}</p>
+                    <p><strong>😋 맛:</strong> ${menu.taste}</p>
+                    <p style="color: #d32f2f; margin-top: 4px;"><strong>👍 장점:</strong> ${menu.advantage}</p>
+                </div>
+                <div>
+                    <span class="tag">#추천메뉴</span>
+                    <span class="tag">#가성비</span>
+                </div>
+            `;
+            resultDiv.appendChild(card);
+        });
+    }
+</script>
+
+</body>
+</html>
