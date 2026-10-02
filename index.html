@@ -1,262 +1,375 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오늘 뭐 먹지? 🇨🇳 중국집 메뉴 추천기</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
-        }
-        body {
-            background-color: #f8f9fa;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background: #fff;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #d32f2f;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        input[type="number"], select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-        button {
-            width: 100%;
-            padding: 15px;
-            background-color: #d32f2f;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background-color: #b71c1c;
-        }
-        .result-container {
-            margin-top: 30px;
-        }
-        .menu-card {
-            background: #fff5f5;
-            border: 1px solid #ffe0e0;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        .menu-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #b71c1c;
-            display: flex;
-            justify-content: space-between;
-        }
-        .menu-price {
-            font-size: 16px;
-            color: #555;
-        }
-        .menu-desc {
-            margin-top: 8px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        .tag {
-            display: inline-block;
-            background: #ffe0e0;
-            color: #d32f2f;
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-size: 12px;
-            margin-top: 8px;
-            margin-right: 5px;
-        }
-        .no-result {
-            text-align: center;
-            color: #777;
-            padding: 20px;
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>🇨🇳 중국집 메뉴 추천기</h1>
-    
-    <!-- 입력 폼 -->
-    <div class="form-group">
-        <label for="budget">최대 예산 (원)</label>
-        <input type="number" id="budget" placeholder="예: 12000" step="1000">
-    </div>
-
-    <div class="form-group">
-        <label for="hunger">현재 허기짐 상태</label>
-        <select id="hunger">
-            <option value="1">1단계: 출출함 (간편하게 먹고 싶음)</option>
-            <option value="2" selected>2단계: 적당함 (기본 1인분)</option>
-            <option value="3">3단계: 배고픔 (든든한 식사/세트)</option>
-            <option value="4">4단계: 매우 배고픔 (메인요리/폭식)</option>
-        </select>
-    </div>
-
-    <button onclick="recommendMenu()">맞춤 메뉴 추천받기 🍜</button>
-
-    <!-- 결과 출력 영역 -->
-    <div id="results" class="result-container"></div>
-</div>
-
-<script>
-    // 중국집 메뉴 데이터 베이스
-    const menuData = [
-        {
-            name: "짜장면",
-            price: 7000,
-            hungerLevel: [1, 2],
-            desc: "춘장과 돼지고기, 야채를 볶아 만든 대표 중화요리.",
-            taste: "달콤하고 고소한 풍미가 일품입니다.",
-            advantage: "가장 가성비가 좋고 호불호 없이 빠르고 맛있게 먹을 수 있습니다."
-        },
-        {
-            name: "짬뽕",
-            price: 8500,
-            hungerLevel: [1, 2],
-            desc: "해산물과 채소가 듬뿍 들어간 칼칼한 국물 면요리.",
-            taste: "얼큰하고 시원한 해물 국물 맛.",
-            advantage: "해장용으로 최고이며 해산물과 면을 동시에 즐길 수 있습니다."
-        },
-        {
-            name: "간짜장",
-            price: 8500,
-            hungerLevel: [2],
-            desc: "물과 녹말 없이 양파와 고기를 바로 볶아낸 짜장면.",
-            taste: "진한 불향과 양파의 아삭아삭한 식감.",
-            advantage: "일반 짜장보다 신선하고 깊은 불맛을 느낄 수 있습니다."
-        },
-        {
-            name: "볶음밥",
-            price: 8500,
-            hungerLevel: [2, 3],
-            desc: "계란, 야채와 함께 고슬고슬하게 볶아낸 밥에 짜장 소스 결합.",
-            taste: "고소한 밥과 짭조름한 짜장 소스의 조화.",
-            advantage: "면보다 밥을 선호하는 분께 추천하며, 짬뽕 국물까지 제공됩니다."
-        },
-        {
-            name: "잡채밥",
-            price: 9500,
-            hungerLevel: [2, 3],
-            desc: "매콤하게 볶아낸 당면과 야채를 밥 위에 얹은 메뉴.",
-            taste: "매콤달콤하고 쫄깃한 당면의 식감.",
-            advantage: "탄수화물 충전에 최고이며 든든한 한 끼로 제격입니다."
-        },
-        {
-            name: "탕짜면 / 짬짜면 (반반)",
-            price: 10500,
-            hungerLevel: [3],
-            desc: "두 가지 인기 메뉴를 반반 그릇에 담아 동시에 즐기는 메뉴.",
-            taste: "단짠(짜장/탕수육) 또는 매콤달콤의 완벽한 조화.",
-            advantage: "메뉴 결정 장애가 있을 때 부담 없이 탕수육까지 맛볼 수 있습니다."
-        },
-        {
-            name: "차돌짬뽕",
-            price: 11000,
-            hungerLevel: [3],
-            desc: "고소한 차돌박이를 듬뿍 올린 진한 국물의 짬뽕.",
-            taste: "고기의 묵직하고 고소한 육즙이 녹아든 매콤한 국물.",
-            advantage: "일반 짬뽕보다 훨씬 깊고 묵직한 국물 맛과 든든함이 강점입니다."
-        },
-        {
-            name: "1인 탕수육 세트 (짜장+탕수육)",
-            price: 15000,
-            hungerLevel: [3, 4],
-            desc: "짜장면 1공기와 미니 탕수육이 세트로 구성된 메뉴.",
-            taste: "바삭하고 달콤한 탕수육과 고소한 짜장면의 만남.",
-            advantage: "혼자서도 탕수육을 남김없이 알차게 즐길 수 있습니다."
-        },
-        {
-            name: "요리류 (탕수육 小 / 깐풍기)",
-            price: 20000,
-            hungerLevel: [4],
-            desc: "돼지고기 또는 닭고기를 바삭하게 튀겨 특제 소스에 버무린 메인 요리.",
-            taste: "겉은 바삭, 속은 촉촉하며 새콤달콤하거나 매콤한 소스 맛.",
-            advantage: "배가 매우 고프거나 술안주/특식으로 즐기기에 최고의 선택입니다."
-        }
-    ];
-
-    function recommendMenu() {
-        const budgetInput = document.getElementById('budget').value;
-        const hungerSelect = parseInt(document.getElementById('hunger').value);
-        const resultDiv = document.getElementById('results');
-
-        resultDiv.innerHTML = ""; // 기존 결과 초기화
-
-        if (!budgetInput || budgetInput <= 0) {
-            alert("최대 예산을 바르게 입력해 주세요!");
-            return;
-        }
-
-        const budget = parseInt(budgetInput);
-
-        // 예산 및 허기짐 조건에 맞는 메뉴 필터링
-        const filteredMenus = menuData.filter(menu => {
-            const isPriceOk = menu.price <= budget;
-            const isHungerOk = menu.hungerLevel.includes(hungerSelect);
-            return isPriceOk && isHungerOk;
-        });
-
-        if (filteredMenus.length === 0) {
-            resultDiv.innerHTML = `<div class="no-result">😭 입력하신 금액(${budget.toLocaleString()}원)과 허기짐 상태에 맞는 메뉴가 없습니다.<br>예산을 조금 더 늘려보세요!</div>`;
-            return;
-        }
-
-        // 결과 카드 생성
-        filteredMenus.forEach(menu => {
-            const card = document.createElement('div');
-            card.className = 'menu-card';
-            card.innerHTML = `
-                <div class="menu-title">
-                    <span>${menu.name}</span>
-                    <span class="menu-price">${menu.price.toLocaleString()}원</span>
-                </div>
-                <div class="menu-desc">
-                    <p><strong>📝 설명:</strong> ${menu.desc}</p>
-                    <p><strong>😋 맛:</strong> ${menu.taste}</p>
-                    <p style="color: #d32f2f; margin-top: 4px;"><strong>👍 장점:</strong> ${menu.advantage}</p>
-                </div>
-                <div>
-                    <span class="tag">#추천메뉴</span>
-                    <span class="tag">#가성비</span>
-                </div>
-            `;
-            resultDiv.appendChild(card);
-        });
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>저주받은 알림장</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Noto+Serif+KR:wght@300;600;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Serif KR', serif;
     }
-</script>
 
+    body {
+      background-color: #030303;
+      background-image: radial-gradient(circle at 50% 50%, #110202 0%, #000000 90%);
+      color: #bfbfbf;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%);
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(10, 10, 10, 0.95);
+      border: 1px solid #330000;
+      border-radius: 4px;
+      padding: 35px 25px;
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.9), 0 0 15px rgba(80, 0, 0, 0.4);
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      font-family: 'Creepster', cursive;
+      font-size: 28px;
+      color: #8b0000;
+      text-align: center;
+      letter-spacing: 3px;
+      margin-bottom: 20px;
+      text-shadow: 0 0 8px rgba(139, 0, 0, 0.8);
+    }
+
+    .image-uploader {
+      margin-bottom: 20px;
+      text-align: center;
+      background: #110505;
+      padding: 10px;
+      border: 1px dashed #550000;
+      border-radius: 4px;
+    }
+
+    .image-uploader label {
+      font-size: 12px;
+      color: #a87373;
+      cursor: pointer;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .image-uploader input {
+      font-size: 11px;
+      color: #888;
+    }
+
+    .step-view { display: none; }
+    .step-view.active {
+      display: block;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-dots {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #222;
+      border: 1px solid #444;
+      transition: all 0.5s;
+    }
+
+    .dot.active {
+      background: #8b0000;
+      border-color: #ff0000;
+      box-shadow: 0 0 8px #ff0000;
+    }
+
+    label {
+      font-size: 13px;
+      color: #8a7373;
+      display: block;
+      margin-bottom: 10px;
+      letter-spacing: -0.5px;
+    }
+
+    textarea, input[type="time"] {
+      width: 100%;
+      background: #080808;
+      border: 1px solid #2a0000;
+      color: #d1b8b8;
+      padding: 14px;
+      font-size: 14px;
+      border-radius: 2px;
+      outline: none;
+      margin-bottom: 25px;
+      transition: border-color 0.3s;
+    }
+
+    textarea:focus, input[type="time"]:focus {
+      border-color: #8b0000;
+      box-shadow: 0 0 5px rgba(139, 0, 0, 0.5);
+    }
+
+    textarea { height: 110px; resize: none; line-height: 1.6; }
+
+    .btn {
+      width: 100%;
+      padding: 16px;
+      background: #1a0000;
+      border: 1px solid #5a0000;
+      color: #a33;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all 0.3s;
+    }
+
+    .btn:hover {
+      background: #330000;
+      color: #ff4d4d;
+      border-color: #ff0000;
+      box-shadow: 0 0 12px rgba(255, 0, 0, 0.4);
+    }
+
+    .btn-sub {
+      background: transparent;
+      border: 1px solid #222;
+      color: #666;
+      margin-top: 10px;
+    }
+
+    .btn-sub:hover {
+      background: #111;
+      color: #999;
+      border-color: #444;
+      box-shadow: none;
+    }
+
+    .preview-box {
+      background: #050505;
+      border-left: 2px solid #8b0000;
+      padding: 15px;
+      margin-bottom: 25px;
+      font-size: 13px;
+      color: #aaa;
+      line-height: 1.6;
+    }
+
+    .sms-box {
+      background: #000;
+      border: 1px solid #333;
+      padding: 18px;
+      font-size: 13px;
+      color: #8b0000;
+      line-height: 1.7;
+      margin-top: 15px;
+      letter-spacing: 0.5px;
+    }
+
+    /* =========================================
+       점프스케어 레이어 (보내주신 사진 적용)
+    ========================================= */
+    #jumpscare-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: #000;
+      z-index: 99999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* 사진 확대를 통한 강렬한 곤충 점프스케어 모션 */
+    .custom-monster-img {
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      animation: monsterZoom 0.04s infinite alternate;
+    }
+
+    @keyframes monsterZoom {
+      0% { transform: scale(1.15) translate(-10px, 6px); }
+      50% { transform: scale(1.35) translate(10px, -8px); }
+      100% { transform: scale(1.2) translate(-5px, -10px); }
+    }
+
+    .screen-flash {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #002244;
+      opacity: 0;
+      z-index: 100000;
+      pointer-events: none;
+    }
+
+    .flash-anim { animation: blueFlash 0.35s ease-out; }
+
+    @keyframes blueFlash {
+      0% { opacity: 0.8; }
+      100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body onclick="playDoorSoundOnce()">
+
+  <!-- 음향 효과: 오래된 문 소리만 사용 -->
+  <audio id="doorSound" src="https://assets.mixkit.co/active_storage/sfx/2658/2658-preview.mp3" preload="auto"></audio>
+
+  <div id="flash-layer" class="screen-flash"></div>
+
+  <!-- 이미지 오버레이 레이어 -->
+  <div id="jumpscare-overlay">
+    <!-- 기본 파일명: ant-face.jpg (보내주신 이미지를 ant-face.jpg로 저장하거나 파일 첨부 기능을 이용하세요) -->
+    <img id="jumpscareImg" class="custom-monster-img" src="ant-face.jpg" alt="Ant Face Jumpscare">
+  </div>
+
+  <div class="card">
+    <h1>THE REMINDER</h1>
+
+    <!-- 사진 변경용 커스텀 업로더 -->
+    <div class="image-uploader">
+      <label for="imgInput">📁 튀어나올 이미지 파일 직접 선택 (클릭)</label>
+      <input type="file" id="imgInput" accept="image/*" onchange="loadCustomImage(event)">
+    </div>
+
+    <div class="step-dots">
+      <div class="dot active" id="dot1"></div>
+      <div class="dot" id="dot2"></div>
+      <div class="dot" id="dot3"></div>
+    </div>
+
+    <!-- 1단계 -->
+    <div class="step-view active" id="step1">
+      <label>알림장 텍스트를 입력하십시오.</label>
+      <textarea id="kakaoText" placeholder="예: [알림장] 내일 준비물: 미술 붓, 8색 물감..."></textarea>
+      <button class="btn" onclick="triggerJumpscareAndNext(2)">다음 단계로 이동</button>
+    </div>
+
+    <!-- 2단계 -->
+    <div class="step-view" id="step2">
+      <label>인식된 준비물 목록</label>
+      <div class="preview-box">
+        <span id="parsedItems">8색 수채화 물감, 붓 set, 4절 도화지</span>
+      </div>
+      <label>알림 발송 시각</label>
+      <input type="time" id="alarmTime" value="20:00">
+      <button class="btn" onclick="triggerJumpscareAndNext(3)">알림 설정 확정</button>
+      <button class="btn btn-sub" onclick="triggerJumpscareAndNext(1)">이전 단계</button>
+    </div>
+
+    <!-- 3단계 -->
+    <div class="step-view" id="step3">
+      <label>알림 설정이 완료되었습니다.</label>
+      <div class="sms-box">
+[알림]
+당신이 내일 챙겨야 할 준비물입니다.
+
+- 8색 수채화 물감
+- 붓 set
+- 4절 도화지
+
+절대 잊지 마십시오.
+      </div>
+      <button class="btn" style="margin-top: 25px;" onclick="triggerJumpscareAndNext(1)">처음으로 돌아가기</button>
+    </div>
+  </div>
+
+  <script>
+    let currentStep = 1;
+    let doorPlayed = false;
+
+    // 이미지 로컬 업로드 처리
+    function loadCustomImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('jumpscareImg').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // 오래된 문 소리
+    function playDoorSoundOnce() {
+      if (!doorPlayed) {
+        const door = document.getElementById('doorSound');
+        door.volume = 0.5;
+        door.play().catch(e => {});
+        doorPlayed = true;
+      }
+    }
+
+    // 버튼 클릭 시 지정한 이미지가 확 튀어나오는 함수
+    function triggerJumpscareAndNext(targetStep) {
+      const overlay = document.getElementById('jumpscare-overlay');
+      const flash = document.getElementById('flash-layer');
+      const door = document.getElementById('doorSound');
+
+      // 번쩍임 및 얼굴 등장
+      flash.classList.add('flash-anim');
+      overlay.style.display = 'flex';
+
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        flash.classList.remove('flash-anim');
+
+        // 단계 전환
+        document.getElementById('step' + currentStep).classList.remove('active');
+        document.getElementById('dot' + currentStep).classList.remove('active');
+
+        currentStep = targetStep;
+
+        document.getElementById('step' + currentStep).classList.add('active');
+        document.getElementById('dot' + currentStep).classList.add('active');
+
+        if (targetStep === 2) {
+          const input = document.getElementById('kakaoText').value;
+          if (input.trim() !== "") {
+            document.getElementById('parsedItems').innerText = input;
+          }
+        }
+
+        // 오래된 문 소리 재생
+        door.currentTime = 0;
+        door.volume = 0.4;
+        door.play().catch(e => {});
+      }, 550);
+    }
+  </script>
 </body>
 </html>
